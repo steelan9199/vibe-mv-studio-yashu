@@ -13,7 +13,9 @@
     "preview": "node server/main.mjs",
     "start": "node server/main.mjs",
     "db:init": "node scripts/db.mjs init",
-    "status": "node scripts/status.mjs"
+    "status": "node scripts/status.mjs",
+    "open": "node scripts/open-studio.mjs",
+    "push": "node push.js"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",

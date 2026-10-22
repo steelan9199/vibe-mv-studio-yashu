@@ -7,6 +7,7 @@
 
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { isRosterSkill } from './config.mjs';
 
 const DIM_KINDS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 
@@ -86,6 +87,8 @@ export function reindex(db, { libRoot, skillsDir }) {
       if (!existsSync(file)) continue;
       const fm = parseFrontmatter(readFileSync(file, 'utf8'));
       const name = fm.name || dir;
+      /* 只入库「经理 + 花名册」，白名单在 config.mjs；不在册的技能与本工作台无关 */
+      if (!isRosterSkill(name)) continue;
       const before = db.prepare('SELECT count(*) n FROM skills WHERE name=?').get(name).n;
       upsert.run(name, fm.layer ?? null, oneLineRole(fm.description), fm.version ?? null, file);
       out.skills++;
