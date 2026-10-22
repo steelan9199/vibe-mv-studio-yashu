@@ -1,0 +1,19 @@
+/* 纸样册的八个色值 + 两种字体栈。这是唯一的颜色出处。 */
+:root {
+  --paper: #faf8f3;
+  --paper-hi: #fffdf8;
+  --ink: #2c2c2a;
+  --ink-2: #5f5e5a;
+  --ink-3: #8a8880;
+  --rule: #e4e0d6;
+  --seal: #a32d2d;
+  --done: #3b6d11;
+  --draft: #185fa5;
+  --partial: #854f0b;
+
+  --font-sans: system-ui, 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --gap: 24px;
+  --radius: 6px;
+}

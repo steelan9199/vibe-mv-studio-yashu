@@ -1,6 +1,6 @@
 ---
 name: vibe-mv-studio-yashu
-description: 搭建与维护「MV 工作室」——vibe MV 制作的本地数据工作台。老板只在聊天框里工作，每完成一步让 AI 把产出存进 SQLite（唯一真相），他再打开网页查看。五个页面只读：首页（每首歌卡在哪一关）、单歌（各关产物：音频、歌词、分镜、图墙、SVG、成片）、资产库（跨歌图墙）、技能（技能 × 歌 的调用矩阵）、成本。大文件只存路径，全部落 D:\vibe-mv-文件库\；一步 = 一个事务。**自进化**：每轮开工先跑 `node scripts/status.mjs` 自算待办（关卡进度、入库缺口、该做什么），不问人、不等提醒；自己有权改文档与代码，但花钱/删数据/内容判断必须先问。纯 JS 零依赖，node:sqlite 内置驱动，端口 8791。本技能不画 SVG、不打轴、不写分镜、不渲片。触发词：搭工作台、建工作台、数据工作台、MV工作室、把数据存进数据库、存数据、存进库、打开工作台看数据、看数据、技能列表、调用矩阵、mv.db、SQLite、工作台加一首歌、自检、体检、我现在该干什么、还有什么事没做、仓库推一下。
+description: 搭建与维护「MV 工作室」——vibe MV 制作的本地数据工作台。老板只在聊天框里工作，每完成一步让 AI 把产出存进 SQLite（唯一真相），他再打开网页查看。五个页面只读：首页（每首歌卡在哪一关）、单歌（各关产物：音频、歌词、分镜、图墙、SVG、成片）、资产库（跨歌图墙）、技能（技能 × 歌 的调用矩阵）、成本。大文件只存路径，全部落 D:\vibe-mv-文件库\；一步 = 一个事务。**自进化**：每轮开工先跑 `node scripts/status.mjs` 自算待办（关卡进度、入库缺口、该做什么），不问人、不等提醒；自己有权改文档与代码，但花钱/删数据/内容判断必须先问。技术栈：纯 JS + ES Module、Hono 后端、Vue 3 + Vite 前端、node:sqlite 内置驱动；五页只读、分层清晰；端口 8791。本技能不画 SVG、不打轴、不写分镜、不渲片。触发词：搭工作台、建工作台、数据工作台、MV工作室、把数据存进数据库、存数据、存进库、打开工作台看数据、看数据、技能列表、调用矩阵、mv.db、SQLite、工作台加一首歌、自检、体检、我现在该干什么、还有什么事没做、仓库推一下。
 version: 1.4.0
 agent_created: true
 ---
@@ -192,20 +192,36 @@ D:\vibe-mv-文件库\
 ### 4.4 代码位置（老板 2026-10-23 定：全部在这个技能目录里）
 
 ```
-vibe-mv-studio-yashu\          ← 仓库根，git 只跟踪这里
+vibe-mv-studio-yashu\                 ← 仓库根，git 只跟踪这里
   SKILL.md
-  references\                  规格文档
-  scripts\        db.mjs · cli.mjs · sync-skills.mjs(W2) · selftest.mjs(W4)
-  server\         server.mjs · router.mjs · routes\(W3)
-  web\            index.html · song.html · assets.html · skills.html · costs.html · app.css · app.js(W3)
-  启动工作室.cmd  (W3)
+  package.json · vite.config.js      依赖与构建配置（Node v24.22.1）
+  references\                        规格文档
+  scripts\        db.mjs · cli.mjs · status.mjs · selftest.mjs(W4)
+  server\                            后端（Hono）
+    main.mjs                         入口：定 cwd → 起服务
+    app.mjs                          装配：API / 媒体 / 静态 / SPA 兜底 / 错误兜底
+    config.mjs · db.mjs              常量与单例连接
+    domain\       gates.mjs          六关定义（唯一出处）
+    repositories\ 一表一文件          SQL 只写在这里
+    services\     dashboard/song/assets/skills/costs/stages/todo  业务拼装
+    routes\       一域一文件          只做参数解析与响应
+    http\         binary.mjs         Range 字节流（range-parser）
+    ingest.mjs                       唯一允许 readdir 的模块（刷新索引）
+  web\                               前端（Vue 3 + Vite）
+    index.html
+    src\  main.js · App.vue
+          router\ · api\ · stores\ · composables\ · domain\ · utils\ · styles\
+          components\  layout/ common/ media/ home/ song/(gates/) skills/ assets/
+          views\       Home / Song / Assets / Skills / Costs
+  启动工作室.cmd                      双击：装依赖 → 构建 → 起服务 → 开浏览器
 ```
 
 | 规矩 | 理由 |
 |---|---|
 | **代码只住技能目录，数据只住 `D:\vibe-mv*\`** | 仓库可公开、可同步；数据是老板的东西，绝不能进 git |
-| 服务端不 import 任何第三方包 | 零依赖，克隆下来 `node server.mjs` 就能跑 |
-| `web/` 里没有构建步骤 | 原生 HTML/CSS/JS，改了刷新即生效 |
+| 分层不许倒挂 | `route → service → repository → db`；SQL 只在 repository，业务判断只在 service |
+| 一个文件不放太多东西 | 超两百行就拆：视图拆组件、路由拆文件、服务按域拆 |
+| 依赖进 package.json 并提交 lock | 谁拉下来都装同一套，不靠"我这能跑" |
 
 **git 仓库**：`git@github.com:steelan9199/vibe-mv-studio-yashu.git`（分支 `main`）。`.gitignore` 已挡掉 `*.db` / `*.jsonl` / `exports/` / 临时 payload / `node_modules`。
 
@@ -311,18 +327,20 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 
 | 项 | 规矩 |
 |---|---|
-| 语言 | **纯 JavaScript**（`.mjs`，ESM）。**禁止 TypeScript、禁止编译步骤**（老板 2026-10-23：只写 js 不写 ts） |
-| 依赖 | **零 npm**。数据库用 Node 22 内置 `node:sqlite`（已实测：v22.22.2 不加 flag 可用，只有 experimental 警告） |
-| 后端 | 原生 `node:http`，不引框架 |
-| 前端 | 原生 HTML/CSS/JS，无构建、无 React/Vue |
+| 运行时 | **Node v24.22.1**（`D:\software\nvm\v24.22.1\node.exe`，老板 2026-10-23 指定） |
+| 语言 | **JavaScript + ES Module**：`import/export`、`const/let`、箭头函数、解构、可选链。**禁止 TypeScript；禁止 CommonJS（`require`）与 `var`**（老板：只写 JS，写 ES6 语法） |
+| 依赖 | 用现成轮子，不自己造：后端 **Hono + @hono/node-server**，前端 **Vue 3 + Vite + Vue Router + Pinia**，Markdown 用 **marked**，时间用 **dayjs**，Range 解析用 **range-parser**，数据库用内置 `node:sqlite` |
+| 后端 | Hono。分层固定 `route → service → repository → db`；SQL 只出现在 repository |
+| 前端 | Vue 3 SFC + `<script setup>`；页面在 `views/`，复用件在 `components/`，接口只走 `api/`；跨栏共享才进 Pinia |
 | 绑定 | 只绑 `127.0.0.1`，不上传外网 |
-| 端口 | **8791**（8787 打轴、8788 审图；旧 8790 已废弃） |
-| 启动 | 双击 `启动工作室.cmd`（⬜ W3 才建）；受管后台任务不能长驻，给老板用必须走 `.cmd` |
+| 端口 | **8791**（8787 打轴、8788 审图；旧 8790 已废弃）；开发时 Vite 5173，`/api`、`/media` 代理回 8791 |
+| 启动 | 双击 `启动工作室.cmd`（自动装依赖、构建、起服务、开浏览器）；受管后台任务不能长驻，给老板用必须走 `.cmd` |
 | 数据库 | `mv.db`，开 `journal_mode=WAL`、`foreign_keys=ON` |
 | 验活 | `curl` 必须加 `--noproxy '*'`，否则本机代理会伪造 502 |
 | UI | 中文界面，以看为主，不逼老板打字 |
 
-**启动顺序**（少一步就会看到空页面）：建库 → 扫技能 → 读文件库 → 起服务。
+**启动顺序**（少一步就会看到空页面）：装依赖 → 建库 → 构建前端 → 起服务 → 打开 `http://127.0.0.1:8791`。
+日常改前端：一个终端 `npm run start`（8791 接口），另一个 `npm run dev`（5173 热更新，自动代理 `/api`、`/media`）；改完 `npm run build` 再双击 `.cmd`。
 
 ---
 
@@ -333,9 +351,9 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 | W0 建库 | `scripts/db.mjs init` 建表、开 WAL、写 `user_version` | `mv.db` 存在，11 张表齐，`PRAGMA user_version` = 2 | ✅ 完成 |
 | W1 灌数据 | 把《叫我老王八》的真实数据传输进库（歌/关/文档/二进制/技能） | 能 `show` 出来，数值与文件一致 | 🟡 部分完成（音歌轴已进，资产与图待搬） |
 | W2 写入命令 | `cli.mjs save` + 校验 + 幂等 + 事务 | 同一 payload 连跑两次，行数不变 | ✅ 完成（已实测幂等） |
-| W3 五个页面 | 首页/单歌/资产库/技能/成本 | 每页都能回答 §7 那一列的问题 | ⬜ 未开始 |
+| W3 五个页面 | 首页/单歌/资产库/技能/成本 | 每页都能回答 §7 那一列的问题 | ✅ 完成（Vue 3 + Vite + Hono，2026-10-23 实机验过五页） |
 | W4 自测 | `scripts/selftest.mjs` 跑判据 | 全过 | ⬜ 未开始 |
-| W5 交付 | 写操作手册，老板能自己双击启动 | 老板照手册从"打开"到"看到图"不出错 | ⬜ 未开始 |
+| W5 交付 | 写操作手册，老板能自己双击启动 | 老板照手册从"打开"到"看到图"不出错 | 🟡 双击脚本已能起；手册待写 |
 | W6 导出与增量 | `export-story` 命令 + 文件监听 | 渲片前一条命令出 `story.json` | ⬜ 未开始 |
 
 ### 9.1 当前数据实况（2026-10-23，随时会变，以 `db.mjs stats` 为准）
@@ -349,21 +367,20 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 | 文本产物 | 3 份（lyrics 7 句 47 字 / music slim / 原始歌词） |
 | 二进制 | 2 个（song.mp3 380KB、music 全档 60KB） |
 | 资产 / 图 / SVG | 0 / 0 / 0（旧 `ai-gen/` 里 18 件资产、37 张候选图**还没搬进来**） |
-| 技能 | 2 条（analyzer、lyric-tapper），流水 2 条 |
+| 技能 | 43 条（点过一次「刷新索引」后从技能目录扫进来；其中有调用的 2 条：analyzer、lyric-tapper） |
 
-**下一步是 W1 收尾**：把 18 件资产与候选图搬进 `images/<asset_key>/` 并入库，然后才开 W3 写页面。
+**下一步是 W1 收尾**：把 18 件资产与候选图搬进 `images/<asset_key>/` 并入库。页面已经能看，但资产库页现在只有空状态。
 
 ### 9.2 还没建的文件（别以为它们存在）
 
 | 文件 | 属于 | 现在写它会不会白费 |
 |---|---|---|
-| `server.mjs` + `web/` | W3 五个页面 | 不会。等资产入库定型再写，省一轮返工 |
-| `启动工作室.cmd` | W3 | 同上，服务没写时这个脚本没意义 |
-| `scripts/sync-skills.mjs` | W2 补 | 现在 `save` 会自动补技能名，够用 |
 | `cli.mjs export-story` | W6 | 到真要渲片时才写 |
-| `scripts/selftest.mjs` | W4 | 页面出来才有得测 |
+| `scripts/selftest.mjs` | W4 | 页面出来了，可以照 §10 那九条判据写 |
+| `scripts/sync-skills.mjs` | 已被替代 | 不再单独建：`server/ingest.mjs` 的 `reindex` 就是它，网页顶部「刷新索引」调的即是 |
 
-**已存在的只有 `scripts/db.mjs` 与 `scripts/cli.mjs`。** 老板问"工作台能不能打开"时，正确答案是：**服务还没写，现在能看数据的唯一方式是 `cli.mjs show` 或 `query`**。不许含糊成"已经有了"。
+**已经能用的**：`npm run start`（Hono 8791）、`npm run dev`（Vite 5173）、`npm run build`、双击 `启动工作室.cmd`。
+老板问"工作台能不能打开"时，正确答案是：**能，双击 `启动工作室.cmd` 或开 `http://127.0.0.1:8791`。** 数据没入库的关仍显示空状态，那是数据缺口，不是页面缺陷。
 
 **两条不许**：
 
@@ -431,3 +448,4 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 | v0.3.0 | 2026-10-23 | 文档与实况对齐：补 `docs` 表（§3.5，11 张表），命令清单标出 ✅/⬜（`sync-skills` / `export-story` / `selftest` 尚未实现，不许照抄）；新增 §9.1 当前数据实况与 W0~W6 现状；`decisions` 改为同内容去重；`db.mjs init` 的幂等补表特性写进迁移节 |
 | v0.4.0 | 2026-10-23 | **自进化落地**（老板令：不要每件事都等他提醒）。新增 `scripts/status.mjs` 自检命令（自动算关卡进度、入库缺口、按优先级排的待办、体检警告、未建模块）；`SKILL.md` 增 §0.2 开工先自检（三行汇报模板）、§0.3 我能自己定 vs 必须问的两条线、§12 自进化铁律；新增 `references/40-自进化与待办.md`（四个触发器、五步改动流程、知识落位表、不许进化的红线）。description 补自检类触发词 |
 | v0.5.0 | 2026-10-23 | **视觉风格定稿**（经理以产品身份下的规格）：新增 `references/50-视觉风格.md`——隐喻是「纸样册不是仪表盘」，八个色值（纸白 `#FAF8F3` / 印泥红 `#A32D2D` 只给待办与当前关）、数字等宽、组件画法、动效只许三种、明确禁止渐变/阴影/骨架屏闪光/暗色主题、单歌页三栏比例与逐字高亮、三条自检（眯眼/截图/删色）。`30-页面规格.md` §0 全局同步（正文 13px、加载态改为不闪骨架、禁止项列表） |
+| v0.6.0 | 2026-10-23 | **技术栈换代，与老板三条要求对齐（ES6 语法 / 用现成工具 / 该拆就拆）**：①运行时定为 Node v24.22.1；②后端 `node:http` → **Hono + @hono/node-server**，按 `route → service → repository → db` 四层拆开（9 个 repository、7 个 service、7 个 route，SQL 只在 repository）；③前端原生 JS → **Vue 3 + Vite + Vue Router + Pinia**，`web/src` 下 views/components/api/stores/composables/domain/utils/styles 分目录，单歌页按关拆成 7 个 Gate 组件；④Markdown 用 marked、时间用 dayjs、Range 用 range-parser，不再手写；⑤新增 `vite.config.js`、`package.json`（含 lock）、`启动工作室.cmd`（装依赖→构建→起服务→开浏览器）；⑥W3 五个页面完成并实机验过（首页/单歌/资产库/技能/成本全部 200，音频走 206 Range）；⑦`status.mjs` 待办规则同步：删掉「W3 未写」，改为检查前端是否构建；技能体检只算真被调用过的技能 |

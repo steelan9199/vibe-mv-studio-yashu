@@ -1,0 +1,32 @@
+{
+  "name": "vibe-mv-studio",
+  "private": true,
+  "version": "0.6.0",
+  "type": "module",
+  "description": "MV 工作室 · 数据库是唯一真相，网页是只读窗口",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "node server/main.mjs",
+    "start": "node server/main.mjs",
+    "db:init": "node scripts/db.mjs init",
+    "status": "node scripts/status.mjs"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "dayjs": "^1.11.13",
+    "hono": "^4.13.13",
+    "marked": "^15.0.6",
+    "pinia": "^2.3.1",
+    "range-parser": "^1.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.11"
+  }
+}

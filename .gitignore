@@ -22,11 +22,13 @@ payload*.json
 _payload*.json
 *.payload.json
 
-# ---- 依赖与构建（本项目零依赖，防以后手滑） ----
+# ---- 依赖与构建 ----
 node_modules/
+web/dist/
 dist/
 build/
-package-lock.json
+.vite/
+# package-lock.json 要提交：锁死依赖版本，谁拉下来都装同一套
 
 # ---- 系统垃圾 ----
 .DS_Store

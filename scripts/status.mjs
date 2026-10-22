@@ -110,17 +110,22 @@ for (const s of songs) {
 }
 
 /* ---------- 全局待办（跟具体歌无关） ---------- */
-out.backlog.push({ songs: [], pri: 6, action: 'W3 五个页面还没写（server/ 与 web/ 不存在）', why: '老板问"打开工作台"时，目前只能给 cli.mjs show 的输出' });
-
-const skillGap = one("select count(*) n from skills where layer is null or doc_path is null").n;
-if (skillGap) warn(`${skillGap} 条技能缺 layer/role/doc_path（sync-skills.mjs 未写，W2 补；在此之前矩阵只显示次数不显示分层）`);
+const distIndex = path.join(import.meta.dirname, '..', 'web', 'dist', 'index.html');
+if (!existsSync(distIndex)) {
+  out.backlog.push({
+    songs: [], pri: 3,
+    action: '前端还没构建（web/dist/index.html 不存在）',
+    why: '双击启动工作室只能看到提示，先跑 npm run build',
+  });
+}
+const skillGap = one(`select count(*) n from skills k
+  where k.doc_path is null
+    and exists(select 1 from skill_runs r where r.skill_id = k.id)`).n;
+if (skillGap) warn(`${skillGap} 条技能缺 layer/role/doc_path —— 在网页点「刷新索引」，或跑一次 POST /api/reindex 补`);
 
 /* ---------- 未建模块（roadmap，不是待办噪音） ---------- */
 for (const [f, when] of [
-  ['scripts/sync-skills.mjs', 'W2'],
   ['scripts/selftest.mjs', 'W4'],
-  ['server/server.mjs + web/', 'W3'],
-  ['启动工作室.cmd', 'W3'],
   ['cli.mjs export-story', 'W6'],
 ]) if (!existsSync(path.join(import.meta.dirname, '..', f.split(' ')[0]))) out.roadmap.push(`${f} —— ${when}`);
 
