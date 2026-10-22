@@ -1,7 +1,7 @@
 ---
 name: vibe-mv-studio-yashu
 description: 搭建与维护「MV 工作室」——vibe MV 制作的本地数据工作台。老板只在聊天框里工作，每完成一步让 AI 把产出存进 SQLite（唯一真相），他再打开网页查看。五个页面只读：首页（每首歌卡在哪一关）、单歌（各关产物：音频、歌词、分镜、图墙、SVG、成片）、资产库（跨歌图墙）、技能（技能 × 歌 的调用矩阵）、成本。大文件只存路径，全部落 D:\vibe-mv-文件库\；一步 = 一个事务。**自进化**：每轮开工先跑 `node scripts/status.mjs` 自算待办（关卡进度、入库缺口、该做什么），不问人、不等提醒；自己有权改文档与代码，但花钱/删数据/内容判断必须先问。技术栈：纯 JS + ES Module、Hono 后端、Vue 3 + Vite 前端、node:sqlite 内置驱动；五页只读、分层清晰；端口 8791。本技能不画 SVG、不打轴、不写分镜、不渲片。触发词：搭工作台、建工作台、数据工作台、MV工作室、把数据存进数据库、存数据、存进库、打开工作台看数据、看数据、技能列表、调用矩阵、mv.db、SQLite、工作台加一首歌、自检、体检、我现在该干什么、还有什么事没做、仓库推一下。
-version: 1.4.0
+version: 1.4.1
 agent_created: true
 ---
 
@@ -213,7 +213,7 @@ vibe-mv-studio-yashu\                 ← 仓库根，git 只跟踪这里
           router\ · api\ · stores\ · composables\ · domain\ · utils\ · styles\
           components\  layout/ common/ media/ home/ song/(gates/) skills/ assets/
           views\       Home / Song / Assets / Skills / Costs
-  启动工作室.cmd                      双击：装依赖 → 构建 → 起服务 → 开浏览器
+  启动工作室.cmd                      双击：装依赖 → 构建 → 起服务 → 用 Edge 打开（GBK 编码，别存成 UTF-8）
 ```
 
 | 规矩 | 理由 |
@@ -334,7 +334,8 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 | 前端 | Vue 3 SFC + `<script setup>`；页面在 `views/`，复用件在 `components/`，接口只走 `api/`；跨栏共享才进 Pinia |
 | 绑定 | 只绑 `127.0.0.1`，不上传外网 |
 | 端口 | **8791**（8787 打轴、8788 审图；旧 8790 已废弃）；开发时 Vite 5173，`/api`、`/media` 代理回 8791 |
-| 启动 | 双击 `启动工作室.cmd`（自动装依赖、构建、起服务、开浏览器）；受管后台任务不能长驻，给老板用必须走 `.cmd` |
+| 启动 | 双击 `启动工作室.cmd`：装依赖 → 构建 → 起服务 → **服务 listen 成功后才用 Edge 打开** `http://127.0.0.1:8791/`。窗口不会一闪就没：失败一定停住并 `pause` 等人看；端口已被自己占用时退出码 2，脚本直接收工不再弹第二个服务。受管后台任务不能长驻，给老板用必须走 `.cmd` |
+| `.cmd` 编码 | **必须 GBK（cp936）+ CRLF + 无 BOM**。系统活动代码页是 936，写 UTF-8 会让中文按 GBK 解析、把 `if (` 块撕碎（2026-10-23 就是这么一闪而过的）。要改脚本：先用 UTF-8 写临时文件，再转 GBK 覆盖；脚本里先 `chcp 65001` 再跑 node（让 node 的 UTF-8 中文正常显示），node 退出后 `chcp 936` 恢复 |
 | 数据库 | `mv.db`，开 `journal_mode=WAL`、`foreign_keys=ON` |
 | 验活 | `curl` 必须加 `--noproxy '*'`，否则本机代理会伪造 502 |
 | UI | 中文界面，以看为主，不逼老板打字 |
@@ -449,3 +450,4 @@ node scripts/cli.mjs export-story --slug jiaowo-laowangba --out <路径>/exports
 | v0.4.0 | 2026-10-23 | **自进化落地**（老板令：不要每件事都等他提醒）。新增 `scripts/status.mjs` 自检命令（自动算关卡进度、入库缺口、按优先级排的待办、体检警告、未建模块）；`SKILL.md` 增 §0.2 开工先自检（三行汇报模板）、§0.3 我能自己定 vs 必须问的两条线、§12 自进化铁律；新增 `references/40-自进化与待办.md`（四个触发器、五步改动流程、知识落位表、不许进化的红线）。description 补自检类触发词 |
 | v0.5.0 | 2026-10-23 | **视觉风格定稿**（经理以产品身份下的规格）：新增 `references/50-视觉风格.md`——隐喻是「纸样册不是仪表盘」，八个色值（纸白 `#FAF8F3` / 印泥红 `#A32D2D` 只给待办与当前关）、数字等宽、组件画法、动效只许三种、明确禁止渐变/阴影/骨架屏闪光/暗色主题、单歌页三栏比例与逐字高亮、三条自检（眯眼/截图/删色）。`30-页面规格.md` §0 全局同步（正文 13px、加载态改为不闪骨架、禁止项列表） |
 | v0.6.0 | 2026-10-23 | **技术栈换代，与老板三条要求对齐（ES6 语法 / 用现成工具 / 该拆就拆）**：①运行时定为 Node v24.22.1；②后端 `node:http` → **Hono + @hono/node-server**，按 `route → service → repository → db` 四层拆开（9 个 repository、7 个 service、7 个 route，SQL 只在 repository）；③前端原生 JS → **Vue 3 + Vite + Vue Router + Pinia**，`web/src` 下 views/components/api/stores/composables/domain/utils/styles 分目录，单歌页按关拆成 7 个 Gate 组件；④Markdown 用 marked、时间用 dayjs、Range 用 range-parser，不再手写；⑤新增 `vite.config.js`、`package.json`（含 lock）、`启动工作室.cmd`（装依赖→构建→起服务→开浏览器）；⑥W3 五个页面完成并实机验过（首页/单歌/资产库/技能/成本全部 200，音频走 206 Range）；⑦`status.mjs` 待办规则同步：删掉「W3 未写」，改为检查前端是否构建；技能体检只算真被调用过的技能 |
+| v0.6.1 | 2026-10-23 | **修「双击一闪就没」**（老板实测：cmd 闪一下，网页没开）。根因两条：①`启动工作室.cmd` 存成 UTF-8，系统代码页 936 把中文按 GBK 解析，`if not exist (...)` 块被撕碎 → 改存 **GBK + CRLF + 无 BOM**，并用 `goto` 标签替代多行括号块，失败必 `pause` 不闪退；②**开着浏览器打开得太早/根本没开** → 新增 `server/open-browser.mjs`（服务 `listen` 回调里才开、固定 Edge、找不到 Edge 退默认浏览器、只在 `MV_OPEN_BROWSER=1` 时动作）与 `server/http/probe.mjs`（探活）；`main.mjs` 端口被自己占用时不再崩，改打「已经在跑了」+ 打开页面 + 退出码 2，脚本见到 2 直接收工不留残窗。脚本进 node 前 `chcp 65001`（中文日志不乱码）、退出后 `chcp 936` 复原 |

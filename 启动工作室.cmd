@@ -1,21 +1,50 @@
 @echo off
-chcp 65001 >nul
-title MV å·¥ä½œå®¤ Â· 8791
+setlocal
 cd /d "%~dp0"
+title MV ¹¤×÷ÊÒ - 127.0.0.1:8791
 
-if not exist "node_modules" (
-  echo ç¬¬ä¸€æ¬¡å¯åŠ¨ï¼šæ­£åœ¨è£…ä¾èµ–â€¦
-  call npm install
-)
-
-if not exist "web\dist\index.html" (
-  echo æ­£åœ¨æž„å»ºå‰ç«¯â€¦
-  call npm run build
-)
-
-start "" /b cmd /c "timeout /t 2 >nul & start http://127.0.0.1:8791/"
-node server\main.mjs
+rem ---- ÓÅÏÈÓÃÖ¸¶¨µÄ Node v24.22.1£¬ÕÒ²»µ½ÔÙÍË»Ø PATH ÉÏµÄ node ----
+set "NPM=npm"
+if exist "D:\software\nvm\v24.22.1\npm.cmd" set "NPM=D:\software\nvm\v24.22.1\npm.cmd"
+set "NODE=node"
+if exist "D:\software\nvm\v24.22.1\node.exe" set "NODE=D:\software\nvm\v24.22.1\node.exe"
 
 echo.
-echo æœåŠ¡å·²åœæ­¢ã€‚æŒ‰ä»»æ„é”®å…³é—­ã€‚
+echo   ============================================
+echo     MV ¹¤×÷ÊÒ   Hono + Vue 3
+echo     http://127.0.0.1:8791
+echo   ============================================
+echo.
+
+if exist "node_modules\vite\package.json" goto build
+echo   [1/3] µÚÒ»´ÎÆô¶¯£¬ÕýÔÚ°²×°ÒÀÀµ£¨Ö»×°ÕâÒ»´Î£¬ÂýÒ»µãÕý³££©...
+call %NPM% install --no-audit --no-fund
+if errorlevel 1 goto fail
+
+:build
+echo   [2/3] ÕýÔÚ¹¹½¨Ç°¶ËÒ³Ãæ...
+call %NPM% run build
+if errorlevel 1 goto fail
+
+echo   [3/3] ÕýÔÚÆô¶¯·þÎñ£¬¾ÍÐ÷ºó×Ô¶¯ÓÃ Edge ´ò¿ª¹¤×÷Ì¨...
+echo.
+chcp 65001 >nul
+set "MV_OPEN_BROWSER=1"
+"%NODE%" server\main.mjs
+set "RC=%errorlevel%"
+set "MV_OPEN_BROWSER="
+chcp 936 >nul
+echo.
+if "%RC%"=="2" goto :eof
+if not "%RC%"=="0" goto fail
+echo   °´ÈÎÒâ¼ü¹Ø±Õ´°¿Ú¡£
 pause >nul
+goto :eof
+
+:fail
+echo.
+echo   Æô¶¯Ê§°Ü£¬Ô­Òò¿´ÉÏÃæ¼¸ÐÐ±¨´í¡£
+echo   ±ð¼±×Å¹Ø´°¿Ú£¬½ØÍ¼·¢¸ø AI ¾ÍÄÜ¶¨Î»¡£
+echo.
+pause >nul
+goto :eof
