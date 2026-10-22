@@ -154,6 +154,26 @@ D:\vibe-mv-文件库\
 
 `D:\vibe-mv\mv.db`（与文件库分开：库小、要频繁读写、以后可能要挪；仓库大、只增不改）。
 
+### 4.4 代码位置（老板 2026-10-23 定：全部在这个技能目录里）
+
+```
+vibe-mv-studio-yashu\          ← 仓库根，git 只跟踪这里
+  SKILL.md
+  references\                  规格文档
+  scripts\        db.mjs · cli.mjs · sync-skills.mjs(W2) · selftest.mjs(W4)
+  server\         server.mjs · router.mjs · routes\(W3)
+  web\            index.html · song.html · assets.html · skills.html · costs.html · app.css · app.js(W3)
+  启动工作室.cmd  (W3)
+```
+
+| 规矩 | 理由 |
+|---|---|
+| **代码只住技能目录，数据只住 `D:\vibe-mv*\`** | 仓库可公开、可同步；数据是老板的东西，绝不能进 git |
+| 服务端不 import 任何第三方包 | 零依赖，克隆下来 `node server.mjs` 就能跑 |
+| `web/` 里没有构建步骤 | 原生 HTML/CSS/JS，改了刷新即生效 |
+
+**git 仓库**：`git@github.com:steelan9199/vibe-mv-studio-yashu.git`（分支 `main`）。`.gitignore` 已挡掉 `*.db` / `*.jsonl` / `exports/` / 临时 payload / `node_modules`。
+
 ---
 
 ## 5. 数据模型
